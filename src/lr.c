@@ -20,16 +20,21 @@ sub(const char *path, int depth)
 
    dir = opendir(path);
    if (!dir) return;
-   chdir(path);
+   if (chdir(path) != 0) {
+      perror("chdir");
+      goto out; }
 
    while (d = readdir(dir))
       if (*d->d_name != '.') {
          indent(depth);
          puts(d->d_name);
-         lstat(d->d_name, &s);
-         if (S_ISDIR(s.st_mode)) sub(d->d_name, depth + 1); }
+         if (lstat(d->d_name, &s) != 0)
+            perror("lstat");
+         else if (S_ISDIR(s.st_mode))
+            sub(d->d_name, depth + 1); }
 
    chdir("..");
+out:
    closedir(dir);
 }
 
