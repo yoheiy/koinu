@@ -3,19 +3,27 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <stdio.h>
-void
-indent(int n)
-{
-   int i;
+struct dirname {
+   char *name;
+   struct dirname *parent; };
 
-   for (i = 0; i < n; i++) putchar('\t');
+void
+print_dirpart(struct dirname *d)
+{
+   if (!d || !d->name) return;
+
+   if (d->parent) print_dirpart(d->parent);
+
+   fputs(d->name, stdout);
+   putchar('/');
 }
 
 void
-sub(const char *path, int depth)
+sub(char *path, struct dirname *dn0)
 {
    DIR *dir;
    struct dirent *d;
+   struct dirname dn1;
    struct stat s;
 
    dir = opendir(path);
@@ -26,16 +34,29 @@ sub(const char *path, int depth)
 
    while (d = readdir(dir))
       if (*d->d_name != '.') {
-         indent(depth);
+         print_dirpart(dn0);
          puts(d->d_name);
+
          if (lstat(d->d_name, &s) != 0)
             perror("lstat");
-         else if (S_ISDIR(s.st_mode))
-            sub(d->d_name, depth + 1); }
+         else if (S_ISDIR(s.st_mode)) {
+            dn1.name = d->d_name;
+            dn1.parent = dn0;
+            sub(d->d_name, &dn1); } }
 
    chdir("..");
 out:
    closedir(dir);
+}
+
+void
+sub0(char *path)
+{
+   struct dirname d;
+
+   d.parent = NULL;
+   d.name = path;
+   sub(path, &d);
 }
 
 int
@@ -44,10 +65,10 @@ main(int argc, char **argv)
    int i;
 
    if (argc == 1)
-      sub(".", 0);
+      sub0(".");
    else
       for (i = 1; i < argc; i++)
-         sub(argv[i], 0);
+         sub0(argv[i]);
 
    return 0;
 }
