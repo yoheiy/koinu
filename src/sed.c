@@ -2,6 +2,7 @@
 #include <string.h>
 #define BUFSIZE 0x80
 int nr;
+int opt_n;
 
 int
 num_read(char *s)
@@ -78,13 +79,16 @@ sub(char *buf, int c, char **v)
    for (i = 1; i < c; i++)
       sub2(buf, v[i]);
 
-   fputs(buf, stdout);
+   if (!opt_n) fputs(buf, stdout);
 }
 
 int
 main(int argc, char **argv)
 {
    char buf[BUFSIZE];
+
+   if (argc > 1 && argv[1][0] == '-' && argv[1][1] == 'n')
+      opt_n = 1;
 
    while (fgets(buf, sizeof buf, stdin)) {
       nr++;
