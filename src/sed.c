@@ -34,14 +34,17 @@ sub2(char *buf, char *cmd)
       cmd = num_skip(cmd);
 
       if (*cmd == ',') {
-         cmd++;
-         n1 = num_read(cmd);
-         cmd = num_skip(cmd); }
+         if (*++cmd == '$') {
+            n1 = 0;
+            cmd++; }
+         else {
+            n1 = num_read(cmd);
+            cmd = num_skip(cmd); } }
       else
          n1 = n0;
 
       if (n0 > nr) return;
-      if (n1 < nr) return; }
+      if (n1 < nr && n1) return; }
 
    switch (*cmd) {
    case 'd':
